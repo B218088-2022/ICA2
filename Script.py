@@ -6,9 +6,15 @@ import re
 
 # let use input the protein name and taxonomy group name that they want to use
 def identify():
-    protein_in = "_".join(input("please input your protein name\n\t").split())
-    taxonomy_in = "_".join(input("please input the taxonomic group you want to analyse\n\t").split())
-    return protein_in, taxonomy_in
+    while True:
+        protein_in = "_".join(input("please input your protein name\n\t").split())
+        taxonomy_in = "_".join(input("please input the taxonomic group you want to analyse\n\t").split())
+        if protein_in == "" or taxonomy_in == "":
+            print("\n\nYou missed at least one input, I CAN'T create something out of nothing ,sorry! Please try again!!!\n\n")
+            continue
+        else:
+            break
+    return taxonomy_in, protein_in
 
 # prepare a check function to see if the user want to continue or not
 def check_continue(information):
@@ -24,17 +30,22 @@ def download_file(protein_ask = "pyruvate_dehydrogenase", taxonomy_ask = "ascomy
     | efetch -format fasta > {protein_ask}_{taxonomy_ask}.fa")
     return print(f"\t###{protein_ask}_{taxonomy_ask}.fa### has been successfully downloaded to current working directory")
 
+ # find the number of protein sequences that esearch found in advance and tell the user
+result_bin = subprocess.check_output(f"esearch -db protein -query '{protein_ask}[Protein Name] AND {taxonomy_ask}[Organism]'", shell = True)
+result_readable = result_bin.decode("utf-8")
+re.findall(r"<Count>(.*?)</Count>", result_readable)
 
 # main process of the program
 if __name__ == '__main__':
     # get 2 inputs from identify function and store them in 2 variables
     # protein = "pyruvate_dehydrogenase"   taxonomy = "ascomycete_fungi" taxonomy = "mammals"
     protein, taxonomy = identify()
+
     if protein == "" or taxonomy == "":
         protein = "pyruvate_dehydrogenase"
         taxonomy = "ascomycete_fungi"
-        print("you have input nothing, while I can't create something out of nothing, here is an example with \
-protein is \"pyruvate dehydrogenase\" and taxonomy is \"ascomycete fungi\"")
+#         print("you have input nothing, while I can't create something out of nothing, here is an example with \
+# protein is \"pyruvate dehydrogenase\" and taxonomy is \"ascomycete fungi\"")
 
     # download_file(protein, taxonomy)
 
@@ -67,12 +78,27 @@ protein is \"pyruvate dehydrogenase\" and taxonomy is \"ascomycete fungi\"")
     species_unrep_num = len(set(species))
     species_unrep = list(set(species))
 
+
+    # 1.check if the organism and protein names are correct(tell the user that the result of search)
+
+    # 2, pullseq
+    # 3,
+
+
     all_data = {"Accession Number": acc_nums, "organisms" : species, "Sequences" : seqs, "length of sequences" : seqlen}
 
     answer = check_continue(f"there are {species_unrep_num} species in total, "
                    f"which are list below:\n\t{species_unrep}\n\ndo you want to continue")
 
 
+    os.system(f"clustalo -i {protein}_{taxonomy}.fa -o {protein}_{taxonomy}_aligned.fa --distmat-out=distance_matrix.mat --full")
+
+    # get an input to ask the winsize user want
+    os.system(f"plotcon {protein}_{taxonomy}_aligned.fa -winsize {winsize} -graph pdf")
+    print("")
+
+    os.system(f"patmatmotifs ")
+    
 
 
     # with open("%s_%s.fa" % (protein, taxonomy)) as thefile:
@@ -107,6 +133,7 @@ with open(f"{protein}_{taxonomy}.fa") as my_file:
         else:
             current_seq += file_line.strip()
     seqs.append(current_seq)
+
 
 
 
