@@ -57,6 +57,12 @@ def pullseq(protein_name, taxonomy_name, n = 150):
 
 # main processes of the program
 if __name__ == '__main__':
+    print("\n###############################################################################")
+    print("\n Hi!, welcome to use my script! This script is designed for downloading protein\n \
+sequences(fasta format) by the protein name and taxonomy group name you want, and then\n \
+process the information within those sequences. Please follow the text prompts and enter\n \
+some options that you want! Thank you!\n")
+    print("############################################################################\n")
     # get 2 inputs from identify function and store them in 2 variables
     # protein = "pyruvate_dehydrogenase"   taxonomy = "ascomycete_fungi" taxonomy = "mammals"
     protein, taxonomy = identify()
@@ -137,7 +143,7 @@ if __name__ == '__main__':
         # ask the user if they want take a look at the plot
         if check_continue("do you want to view the plot?"):
             # show the image to the user with matplotlib.pyplot
-            print("please wait, processing...")
+            print("\n\tprocessing...please wait...")
             image = plt.imread("plotcon.1.png")
             plt.imshow(image)
             plt.show()
@@ -145,46 +151,73 @@ if __name__ == '__main__':
         if check_continue("I can also generate a distance matrix between each 2 sequences, do you want it?"):
             method = input("please select the correction methods for proteins you want[0:(Uncorrected); 1:(Jukes-Cantor); 2:(Kimura Protein)]: \n\t")
             os.system(f"distmat {protein}_{taxonomy}_aligned.fa -protmethod {method} {protein}_{taxonomy}.distmat")
-        #scan the protein of motifs
-        try: 
-            os.mkdir(f"{protein}_{taxonomy}_scaned_motif_files")   # make a new directory to store motif files
-        except FileExistsError:
-            print(f"folder {protein}_{taxonomy}_scaned_motif_files is already exist")
-        except:
-            pass
-        os.chdir(f"{protein}_{taxonomy}_scaned_motif_files")   # change to the dir
-        os.system("touch scan_motif.tem")   # make a new file to stroe temporary data
-        for acc_num, organism, seq in zip(acc_nums, species, seqs):
-            with open("scan_motif.tem", 'w') as current_seq_file:
-                current_seq_file.write(">" + acc_num + " ")
-                current_seq_file.write(organism + "\n")
-                current_seq_file.write(seq + "\n")
-            os.system(f"patmatmotifs scan_motif.tem {acc_num}.patmatmotifs")  # store the information to each file
-            os.system(f"touch {acc_num}_info.motif")  # make a new file to store motif sequences for current sequence 
-            with open(f"{acc_num}_info.motif", 'a') as motif_file:  # loop to find each motif indexes
-                with open(f"{acc_num}.patmatmotifs", 'r') as motif_file_ori:
-                    for each_line in motif_file_ori:
-                        if each_line.startswith("S"):
-                            motif_start_search = re.search("[\d]+", each_line)
-                            if motif_start_search == None:
-                                continue
-                            else:
-                                motif_start = int(motif_start_search.group(0))
-                        if each_line.startswith("E"):
-                            motif_end_search = re.search("[\d]+", each_line)
-                            if motif_end_search == None:
-                                continue
-                            else:
-                                motif_end = int(motif_end_search.group(0))
-                            motif_file.write("Motif sequence:\n\n")
-                            motif_file.write(f"{seq[motif_start-1:motif_end-1]}\n\n\n")
-            print(f"Motif sequences of protein {acc_num} has been saved in file {acc_num}_info.motif")
-        os.system("rm scan_motif.tem")
-        os.chdir("..")
-
-    if check_continue("Do you want to check the secondary structure of all the sequences:"):
+        # ask to scan the protein of motifs
+        if check_continue("To find motifs of the proteins, I will need to scan protein sequence(s) of interest with motifs from the PROSITE database and generate some files in a new folder, do you want to continue?"):
+            try: 
+                os.mkdir(f"{protein}_{taxonomy}_scaned_motif_files")   # make a new directory to store motif files
+            except FileExistsError:
+                print(f"folder {protein}_{taxonomy}_scaned_motif_files is already exist")
+            except:
+                pass
+            os.chdir(f"{protein}_{taxonomy}_scaned_motif_files")   # change to the dir
+            os.system("touch scan_motif.tem")   # make a new file to stroe temporary data
+            for acc_num, organism, seq in zip(acc_nums, species, seqs):
+                with open("scan_motif.tem", 'w') as current_seq_file:
+                    current_seq_file.write(">" + acc_num + " ")
+                    current_seq_file.write(organism + "\n")
+                    current_seq_file.write(seq + "\n")
+                os.system(f"patmatmotifs scan_motif.tem {acc_num}.patmatmotifs")  # store the information to each file
+                os.system(f"touch {acc_num}_info.motif")  # make a new file to store motif sequences for current sequence 
+                with open(f"{acc_num}_info.motif", 'a') as motif_file:  # loop to find each motif indexes
+                    with open(f"{acc_num}.patmatmotifs", 'r') as motif_file_ori:
+                        for each_line in motif_file_ori:
+                            if each_line.startswith("S"):
+                                motif_start_search = re.search("[\d]+", each_line)
+                                if motif_start_search == None:
+                                    continue
+                                else:
+                                    motif_start = int(motif_start_search.group(0))
+                            if each_line.startswith("E"):
+                                motif_end_search = re.search("[\d]+", each_line)
+                                if motif_end_search == None:
+                                    continue
+                                else:
+                                    motif_end = int(motif_end_search.group(0))
+                                motif_file.write("Motif sequence:\n\n")
+                                motif_file.write(f"{seq[motif_start-1:motif_end-1]}\n\n\n")
+                print(f"Motif sequences of protein {acc_num} has been saved in file {acc_num}_info.motif")
+            os.system("rm scan_motif.tem")
+            os.chdir("..")
+            
+    # optional analysis of other emboss applications
+    if check_continue("\nDo you want to generate a secondary structure prediction file of all the sequences you have?:"):
         os.system(f"garnier {protein}_{taxonomy}.fa secondary_structure.garnier")
-        print("a secondary structure information file has been generated in the current directory\n\n")
+        print("a secondary structure information file: ### secondary_structure.garnier ### has been generated in the current directory\n\n")
+
+        #just too troublesome to analysis each file, abondoned this plan        
+        # with open("secondary_structure.garnier") as garnier_file:
+        #     num_H = []
+        #     num_S = []
+        #     num_T = []
+        #     num_C = []
+        #     for eachline in garnier_file:
+        #         if eachline.startswith("h"):
+        #             num_H.append(len(re.findall("H", each_line)))
+        #         if each_line.startswith("s"):
+        #             num_S.append(len(re.findall("S", each_line)))
+        #         if each_line.startswith("T"):
+        #             num_S.append(len(re.findall("T", each_line)))
+        #         if each_line.startswith(" c"):
+        #             num_S.append(len(re.findall("C", each_line)))
+        #     sum_H = sum(num_H)
+        #     sum_S = sum(num_S)
+        #     sum_T = sum(num_T)
+        #     sum_C = sum(num_C)
+
+
+    if check_continue("\nsince transmembrane parts of protein is kinda meaningful for protein research, do you want me to make a prediction and plot some graph? (!!!there may be no hits at all)"):
+        os.system(f"tmap {protein}_{taxonomy}_aligned.fa {protein}_{taxonomy}.tmap")
+        print("a .png graph has been generated in the directory, as well as the prediction information\n\n")
 
     print("Thank you for using my script! byebye! :-)")
 
